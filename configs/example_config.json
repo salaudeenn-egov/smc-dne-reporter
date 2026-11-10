@@ -1,0 +1,18 @@
+{
+  "_comment": "Copy to <state>_c<n>.json (git-ignored) and fill in. bbox = [min lat, max lat, min lon, max lon] of the state.",
+  "state": "Oyo",
+  "country": "Nigeria",
+  "national_programme": "National programme (NMEP)",
+  "year": 2026,
+  "cycle": 4,
+  "prev_cycle": 3,
+  "tz_offset_hours": 1,
+  "bbox": [7.0, 9.3, 2.6, 4.7],
+  "version": "1.0",
+  "cycles": {
+    "3": "<path to the Cycle 3 export folder>",
+    "4": {"dir": "<path to the Cycle 4 export folder>", "files": {"stock": "<optional explicit file when auto-match is ambiguous>"}}
+  },
+  "out_root": "<output folder, e.g. .../SMC_DnE_Reports/Oyo_C4>",
+  "thresholds": {}
+}

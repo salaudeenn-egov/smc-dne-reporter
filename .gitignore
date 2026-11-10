@@ -1,0 +1,12 @@
+# real configs hold local paths; only the example is shared
+configs/*.json
+!configs/example_config.json
+# never commit outputs, data or keys
+*_PRIVATE_do_not_share/
+01_input_deidentified/
+02_analysis/
+03_report/
+*.csv
+*.pkl
+__pycache__/
+~$*
