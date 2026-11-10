@@ -66,9 +66,34 @@ if mode == "report":
     raw = pd.concat([raw_ct(c) for c in [x for x in (cfg.get("prev_cycle"), cfg["cycle"]) if x]])
     names = {n.strip() for n in pd.concat([raw["Child Name"], raw["Household Head Name"]]).dropna() if len(n.strip().split()) >= 2}
     admin = [a.lower() for a in pd.concat([raw.LGA, raw.Ward, raw["Health Facility"]]).dropna().unique()]
+    names = {n for n in names if n.lower() in low}                          # fast pre-filter: only names present in the text
     names = {n for n in names if not any(n.lower() in a for a in admin)}   # a "name" that is also a place name is not personal data
     users = set(raw["Username"].dropna())
-    res = {"full_name_hits": sum(1 for n in names if n.lower() in low),
+    words = re.findall(r"[a-z']+", low); wc = {}
+    for w in words:
+        wc[w] = wc.get(w, 0) + 1
+
+    # vocabulary of the report's own prose: build_report.py strings + template + spec. A "name" made only of
+    # these words (junk entries such as "may have", "at least") is report wording, not personal data.
+    skill = Path(__file__).resolve().parent.parent
+    prose = (skill / "scripts" / "build_report.py").read_text(encoding="utf-8").lower()
+    prose += "\n".join(p.text for p in docx.Document(skill / "assets" / "SMC_Cycle_Report_Template_v1.docx").paragraphs).lower()
+    for _, sdf in pd.read_excel(skill / "assets" / "SMC_Report_Standard_Spec_v1.xlsx", sheet_name=None, header=None, dtype=str).items():
+        prose += " " + " ".join(sdf.fillna("").values.ravel()).lower()
+    vocab = set(re.findall(r"[a-z']+", prose))
+
+    def leaked(n):
+        if set(re.findall(r"[a-z']+", n.lower())) <= vocab:
+            return False
+        n = re.sub(r"\s+", " ", n.lower().strip())
+        k = len(re.findall(r"(?<![a-z])" + re.escape(n) + r"(?![a-z])", low))   # whole-word match only
+        if not k:
+            return False
+        # junk "names" made of ordinary words ("what the") also occur elsewhere in the report;
+        # a real leaked name has at least one word that appears only inside that name
+        return any(wc.get(t, 0) <= k for t in re.findall(r"[a-z']+", n) if len(t) >= 3)
+
+    res = {"full_name_hits": sum(1 for n in names if leaked(n)),
            "username_hits": sum(1 for u in users if u in txt),
            "uuid_hits": len(re.findall(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", txt)),
            "placeholders": len(re.findall(r"\{\{", d.element.xml)) + txt.count("{{"),
