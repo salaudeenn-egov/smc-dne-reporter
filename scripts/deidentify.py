@@ -122,8 +122,11 @@ for c in CYCLES:
         if "name" in d.columns:
             raw_names |= set(d["name"].dropna())
     raw_names |= set(ct["Child Name"].dropna()) | set(ct["Household Head Name"].dropna())
-    for col in ("Country", "State", "LGA", "Ward", "Health Facility"):
+    # non-personal values: places plus system code columns (a "name" typed as "unique" or "blank" is not a leak)
+    for col in ("Country", "State", "LGA", "Ward", "Health Facility", "Administration Status", "Record Type", "Gender",
+                "productName", "Symptom", "Children Referred", "Cycle Index", "dateOfRegistration"):
         admin_vals |= set(ct[col].dropna()) if col in ct else set()
+admin_vals |= {"ok", "blank", "zero", "invalid", "outside_state"}   # gps_status labels written by this script
 
 map_f = PRIV / "worker_code_map.csv"
 old = pd.read_csv(map_f, dtype=str) if map_f.exists() else pd.DataFrame(columns=["username", "worker_code"])

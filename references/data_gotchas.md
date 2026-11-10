@@ -26,3 +26,9 @@ Problem -> what we saw -> how the pipeline handles it / what to do.
     report scan ignores names that are substrings of LGA, ward or facility names.
 11. **Record Type = duplicate.** This is the export's own flag, not the repeat-dose rule. F08/F09 use it; S01/S02
     (repeat dosing) use child-key counts. Do not mix the two in narrative.
+12. **Code words typed as names.** Nasarawa C3/C4 have child or head "names" equal to system codes
+    ("unique", "blank", "ok" ...). The de-identify leak scan used to flag the Record Type and gps_status
+    columns as leaks. -> System code values (status, record type, gender, product, symptom, cycle index,
+    gps labels) are treated as non-personal, like place names. A real name in any column is still caught.
+13. **Junk names made of ordinary words** ("may have", "at least"). The report scan ignores names whose
+    every word also appears in the report's own prose (build_report.py, template, spec); see verify.py.
